@@ -4,152 +4,154 @@
 ![Language](https://img.shields.io/badge/language-C%23-green)
 ![Framework](https://img.shields.io/badge/framework-.NET%20%7C%20ASP.NET%20Core-lightgrey)
 
-ClientSolution is a Clean / Hexagonal .NET project that demonstrates a well-structured architecture for building a scalable and maintainable API.  
-The current focus is on the **AddClient use case**, with clear separation of concerns between layers.
+ClientSolution is a Clean / Hexagonal .NET project that demonstrates a
+well-structured architecture for building a scalable and maintainable
+API.\
+The current focus is on the **AddClient use case**, with clear
+separation of concerns between layers.
 
----
+------------------------------------------------------------------------
 
 ## 🧱 Project Structure
 
-ClientSolution
-│
-├── Client.DOMAIN
-├── Client.APPLICATION
-├── Client.INFRASTRUCTURE
-└── Client.API
+    ClientSolution
+    │
+    ├── ClientSi.DOMAIN
+    ├── ClientSi.APPLICATION
+    ├── ClientSi.INFRASTRUCTURE
+    └── ClientSi.API
 
 ### 📌 Layers Overview
 
-| Layer | Responsibility |
-|------|----------------|
-| **Domain** | Business entities, rules and core interfaces |
-| **Application** | Use cases, business orchestration, validation |
-| **Infrastructure** | External technical concerns (DB, EF Core, messaging, etc.) |
-| **API** | REST endpoints, DTOs, presentation adapters |
+  ------------------------------------------------------------------------
+  Layer                Responsibility
+  -------------------- ---------------------------------------------------
+  **Domain**           Business entities, rules and core interfaces
 
----
+  **Application**      Use cases, business orchestration, validation
+
+  **Infrastructure**   External technical concerns (DB, EF Core,
+                       messaging, etc.)
+
+  **API**              REST endpoints, DTOs, presentation adapters
+  ------------------------------------------------------------------------
+
+------------------------------------------------------------------------
 
 ## 🧠 Architectural Principles
 
 This project follows **Clean / Hexagonal Architecture**:
 
-- **Domain** is pure and independent of frameworks.
-- **Application** contains use case logic and validation.
-- **Infrastructure** implements technical details like persistence.
-- **API** maps DTOs, calls use cases, and returns HTTP results.
+-   **Domain** is pure and independent of frameworks.
+-   **Application** contains use case logic and validation.
+-   **Infrastructure** implements technical details like persistence.
+-   **API** maps DTOs, calls use cases, and returns HTTP results.
 
 Dependencies always flow inward:
-Client.API → Client.APPLICATION → Client.DOMAIN
-↑
-Client.INFRASTRUCTURE
 
-POST /api/AddClient/ajouter
+    ClientSi.API → ClientSi.APPLICATION → ClientSi.DOMAIN
+                            ↑
+                    ClientSi.INFRASTRUCTURE
+
+------------------------------------------------------------------------
+
+## 🚀 Add Client Use Case
+
+This API supports adding a new client via:
+
+    POST /api/AddClient/ajouter
 
 ### Example Request
 
-```json
+``` json
 {
   "nom": "Dupont",
   "prenom": "Jean",
   "typologie": "FOURNISSEUR"
 }
-Expected Responses
+```
 
-200 OK – on success
+### Expected Responses
 
-400 Bad Request – on validation failure
+-   **200 OK** -- on success
+-   **400 Bad Request** -- on validation failure
 
-🛠 Setting Up
-⚙️ Prerequisites
+------------------------------------------------------------------------
 
-.NET 6.0 or later
+## 🛠 Setting Up
 
-SQL Server (local or remote)
-📦 Database Setup
+### ⚙️ Prerequisites
 
-Add your connection string to Client.API/appsettings.json:
+-   .NET 6.0 or later
+-   SQL Server (local or remote)
+
+------------------------------------------------------------------------
+
+## 📦 Database Setup
+
+Add your connection string to `ClientSi.API/appsettings.json`:
+
+``` json
 {
   "ConnectionStrings": {
     "ClientDb": "Server=(localdb)\\MSSQLLocalDB;Database=ClientDb;Trusted_Connection=True;TrustServerCertificate=True;"
   }
 }
-Register your DbContext in Program.cs:
-builder.Services.AddDbContext<ClientContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ClientDb"))
-);
-Dependency Registration
-builder.Services.AddScoped<Notification>();
+```
 
-builder.Services.AddScoped<IClientRepository, ClientRepository>();
+Register your DbContext in `Program.cs`.
 
-builder.Services.AddScoped<AddClientUseCase>();
-builder.Services.AddScoped<IAddClientUseCase>(sp =>
-{
-    var notification = sp.GetRequiredService<Notification>();
-    var innerUseCase = sp.GetRequiredService<AddClientUseCase>();
-    return new AddClientUseCaseValidation(notification, innerUseCase);
-});
+------------------------------------------------------------------------
 
-builder.Services.AddAutoMapper(typeof(Client.API.Mapping.ClientProfile));
-🧪 Running Migrations
+## 🗺 Dependency Registration
 
-To add and apply migrations:
-dotnet ef migrations add InitClientDb -p Client.INFRASTRUCTURE -s Client.API
-dotnet ef database update -p Client.INFRASTRUCTURE -s Client.API
+Dependencies are configured in the API startup to inject:
 
-🚀 Testing
+-   Repository implementations
+-   Use cases
+-   Validation decorators
+-   AutoMapper
+-   DbContext
 
-You can import a Postman collection to test:
-{
-  "info": {
-    "name": "Client API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "item": [
-    {
-      "name": "Add Client",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"nom\": \"Dupont\",\n  \"prenom\": \"Jean\",\n  \"typologie\": \"FOURNISSEUR\"\n}"
-        },
-        "url": {
-          "raw": "https://localhost:5001/api/AddClient/ajouter"
-        }
-      }
-    }
-  ]
-}
-📈 Design Goals
+------------------------------------------------------------------------
 
-Maintainability
+## 🧪 Running Migrations
 
-Layered separation of responsibilities
+Run EF Core migrations from Infrastructure with API as startup project.
 
-No framework leakage into Domain
+------------------------------------------------------------------------
 
-Easy extension (e.g., UpdateClient, RabbitMQ integration)
+## 🚀 Testing
 
-)
+You can import a Postman collection to test the AddClient endpoint.
 
-📅 Roadmap
+------------------------------------------------------------------------
 
-✔ AddClient
+## 📈 Design Goals
 
-⏳ UpdateClient
+-   Maintainability\
+-   Strict separation of responsibilities\
+-   No framework leakage into Domain\
+-   Easy extension (e.g., UpdateClient, RabbitMQ integration)
 
-📤 RabbitMQ event publishing
+------------------------------------------------------------------------
 
-🔐 Authentication / Authorization
+## 📅 Roadmap
 
-📊 Full suite of unit & integration tests
-🤝 Contributing
+-   ✔ AddClient
+-   ⏳ UpdateClient
+-   📤 RabbitMQ event publishing
+-   🔐 Authentication / Authorization
+-   📊 Unit & integration tests
 
-Feel free to open issues or submit pull requests!
-📝 License
+------------------------------------------------------------------------
 
-This project is open-source and available under the MIT License.
+## 🤝 Contributing
+
+Feel free to open issues or submit pull requests.
+
+------------------------------------------------------------------------
+
+## 📝 License
+
+This repository is open-source under the MIT License.
