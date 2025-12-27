@@ -10,5 +10,6 @@ namespace ClientSi.Domain.Abstractions
     public interface IClientRepository
     {
         Task AddAsync(Client client, CancellationToken cancellationToken = default);
+        Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
     }
 }

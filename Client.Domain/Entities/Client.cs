@@ -14,6 +14,6 @@ namespace ClientSi.Domain.Entities
         public string? Nom { get; set; }
         public string? Prenom { get; set; }
         public bool IsPro { get; set; }
-        public string Typologie { get; set; }
+        public string? Email { get; set; }
     }
 }

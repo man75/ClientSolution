@@ -1,51 +1,63 @@
 ﻿using ClientSi.APPLICATION.Services;
+using ClientSi.Domain.Abstractions;
 using ClientSi.Domain.Entities;
 
-namespace ClientSi.APPLICATION.UseCases.AddClient;
-
-public class AddClientUseCaseValidation : IAddClientUseCase
+namespace ClientSi.APPLICATION.UseCases.AddClient
 {
-    private readonly Notification _notification;
-    private readonly IAddClientUseCase _inner;
-    private IOutputPort _outputPort;
-
-    public AddClientUseCaseValidation(Notification notification, IAddClientUseCase inner)
+    public class AddClientUseCaseValidation : IAddClientUseCase
     {
-        _notification = notification;
-        _inner = inner;
-    }
+        private readonly Notification _notification;
+        private readonly IAddClientUseCase _inner;
+        private readonly IClientRepository _clientRepository;
+        private IOutputPort _outputPort;
 
-    public void SetOutputPort(IOutputPort outputPort)
-    {
-        _outputPort = outputPort;
-        _inner.SetOutputPort(outputPort);
-    }
-
-    public async Task Execute(Client client)
-    {
-        if (!Validate(client))
+        public AddClientUseCaseValidation(
+            Notification notification,
+            IAddClientUseCase inner,
+            IClientRepository clientRepository)
         {
-            _outputPort.Invalid();
-            return;
+            _notification = notification;
+            _inner = inner;
+            _clientRepository = clientRepository;
         }
 
-        await _inner.Execute(client);
-    }
-
-    private bool Validate(Client client)
-    {
-        if (client is null)
+        public void SetOutputPort(IOutputPort outputPort)
         {
-            _notification.AddError("Client", "Client obligatoire");
-            return false;
+            _outputPort = outputPort;
+            _inner.SetOutputPort(outputPort); // on propage au use case réel
         }
 
-        if (string.IsNullOrWhiteSpace(client.Nom))
-            _notification.AddError("Nom", "Nom obligatoire");
+        public async Task Execute(Client client)
+        {
+            if (!await Validate(client))
+            {
+                _outputPort.Invalid();
+                return;
+            }
 
-        if (string.IsNullOrWhiteSpace(client.Prenom))
-            _notification.AddError("Prenom", "Prénom obligatoire");
+            await _inner.Execute(client);
+        }
 
-        return !_notification.HasErrors;
+        private async Task<bool> Validate(Client client)
+        {
+            if (client is null)
+            {
+                _notification.AddError("Client", "Client obligatoire");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(client.Nom))
+                _notification.AddError("Nom", "Nom obligatoire");
+
+            if (string.IsNullOrWhiteSpace(client.Prenom))
+                _notification.AddError("Prenom", "Prénom obligatoire");
+
+            if (string.IsNullOrWhiteSpace(client.Email))
+                _notification.AddError("Email", "Email obligatoire");
+            else if (await _clientRepository.ExistsByEmailAsync(client.Email))
+                _notification.AddError("Email", "Client existant");
+
+            return !_notification.HasErrors;
+        }
     }
 }

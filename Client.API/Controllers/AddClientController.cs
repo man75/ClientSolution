@@ -32,7 +32,7 @@ public class AddClientController : ControllerBase, IOutputPort
     {
         var client = _mapper.Map<Client>(clientDto);
     
-        client.IsPro = clientDto.Typologie == "FOURNISSEUR";
+       
 
         _useCase.SetOutputPort(this);
         await _useCase.Execute(client);

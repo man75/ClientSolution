@@ -25,7 +25,8 @@ builder.Services.AddScoped<IAddClientUseCase>(sp =>
 {
     var notification = sp.GetRequiredService<Notification>();
     var inner = sp.GetRequiredService<AddClientUseCase>();
-    return new AddClientUseCaseValidation(notification, inner);
+    var repo = sp.GetRequiredService<IClientRepository>();
+    return new AddClientUseCaseValidation(notification, inner,repo);
 });
 
 // AutoMapper

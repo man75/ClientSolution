@@ -19,4 +19,11 @@ public class ClientRepository : IClientRepository
         _context.Clients.Add(client);
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return await _context.Clients
+                       .AnyAsync(c => c.Email == email);
+
+    }
 }
