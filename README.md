@@ -37,6 +37,46 @@ separation of concerns between layers.
   ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant U as Utilisateur (Front)
+    participant API as ClientController (API)
+    participant UCVal as AddClientUseCaseValidation
+    participant UC as AddClientUseCase
+    participant Repo as IClientRepository
+    participant NotifSvc as INotificationService (RabbitMQ Producer)
+    participant MQ as RabbitMQ
+    participant NotifAPI as Notification.API (ClientCreatedConsumer)
+
+    U->>API: POST /api/client/add (AddClientDto)
+    API->>API: Mapper DTO -> Client
+    API->>UCVal: SetOutputPort(this)
+    API->>UCVal: Execute(client)
+
+    UCVal->>UCVal: Validate(client)
+
+    alt Client invalide
+        UCVal->>API: IOutputPort.Invalid()
+        API-->>U: 400 Bad Request (Validation Errors)
+    else Client valide
+        UCVal->>UC: Execute(client)
+
+        UC->>Repo: AddAsync(client)
+        Repo-->>UC: OK
+
+        UC->>NotifSvc: NotifyClientCreatedAsync(client)
+        NotifSvc->>MQ: Publish client.created
+        MQ-->>NotifSvc: ACK
+
+        UC->>API: IOutputPort.Ok(response)
+        API-->>U: 200 OK
+    end
+
+    MQ-->>NotifAPI: client.created
+    NotifAPI->>NotifAPI: Traiter notification
+```
 
 ## 🧠 Architectural Principles
 
